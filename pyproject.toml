@@ -1,0 +1,23 @@
+[project]
+name = "rafeeq-capstone"
+version = "1.0.0"
+description = "Rafeeq in production: Madar's permit assistant with MCP tools, approvals, an egress guard, evals and an API"
+requires-python = ">=3.11,<3.14"
+dependencies = [
+    "openai>=3.30",
+    "pydantic>=2.12",
+    "python-dotenv>=1.1",
+    "pandas>=2.2",
+    "mcp>=2.3",
+    "fastapi>=0.150",
+    "uvicorn>=0.40",
+    "httpx>=0.28",
+    "opentelemetry-sdk>=1.45",
+    "pytest>=9.0",
+]
+
+[tool.uv]
+package = false
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
