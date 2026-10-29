@@ -2,26 +2,22 @@
 
 المدة الكلية 8 دقائق، والعرض الحي منها دقيقتان. الهدف: مهمة متعددة الخطوات فيها أدوات، وأداة عبر MCP، وموافقة بشرية، وحارس يمنع تسريب.
 
-## قبل العرض (بالليل وقبل الجلسة بـ 15 دقيقة)
+## قبل العرض (من Colab)
 
-```bash
-cd rafeeq-capstone
-git pull                                   # آخر نسخة
-cat .env | grep -c OPENROUTER_API_KEY      # لازم يطلع 1 (لا تعرضي الملف على الشاشة)
-uv run pytest -q                           # المتوقع: 39 passed
-```
+العرض يصير من Google Colab في المتصفح، فما فيه `.env` ولا تيرمنال: المفتاح في 🔑 Secrets، وكل أمر يبدأ بـ `!`.
 
-1. شغّلي العرض مرة كاملة قبل الجلسة بنفس الرسائل بالضبط. هذا يسخّن الـ cache، فتنعاد الطلبات المتطابقة من القرص بدون انتظار.
-2. سجّلي فيديو احتياطي مدته دقيقتان، يكون فيه طلب الموافقة والحظر واضحين.
-3. كبّري خط الترمنال، وافتحي نافذة ثانية لأمر عرض الـ audit log.
-4. **قاعدة الطوارئ:** إذا تأخر الرد أكثر من 20 ثانية (rate limit)، قولي «النموذج المجاني عليه ضغط، أعرض لكم التسجيل» وشغّلي الفيديو بدون توقف.
+1. افتحي `run_in_colab.ipynb` من زر **Open in Colab** في README، وشغّلي خلية 1 (setup) وخلية 2 (`pytest`: المتوقع 39 passed) وخلية 3 (المتوقع 750 SAR).
+2. شغّلي العرض مرة كاملة قبل الجلسة بنفس الرسائل بالضبط. هذا يسخّن الـ cache، فتنعاد الطلبات المتطابقة من القرص بدون انتظار. **لا تسوين Disconnect للـ runtime بعدها**، عشان ما يضيع الـ cache.
+3. سجّلي فيديو احتياطي مدته دقيقتان بأداة القص في ويندوز (`Win + Shift + R`)، يكون فيه طلب الموافقة والحظر واضحين.
+4. كبّري الخط في المتصفح (`Ctrl` و`+`)، وجهّزي خلايا أوامر الـ audit log تحت خلية المحادثة.
+5. **قاعدة الطوارئ:** إذا تأخر الرد أكثر من 20 ثانية (rate limit)، قولي «النموذج المجاني عليه ضغط، أعرض لكم التسجيل» وشغّلي الفيديو بدون توقف.
 
 ## العرض الحي خطوة بخطوة
 
 ### 1) تشغيل المحادثة
 
-```bash
-uv run rafeeq.py chat --session demo --reset
+```python
+!uv run rafeeq.py chat --session demo --reset
 ```
 
 **المتوقع:** يطلع سطر يذكر النموذج، و`config B`، و`MCP over stdio`، ومسار الـ audit log. بعده يطلع «اكتب رسالتك، وسطر فارغ للخروج».
@@ -56,7 +52,7 @@ uv run rafeeq.py chat --session demo --reset
 
 ```
 🛡️  Rafeeq wants to run a WRITE action / رفيق يطلب تنفيذ إجراء:
-   book_inspection{ "permit_id": "FTR-30311", "slot": "2026-11-04 09:00", "national_id_last4": "****", "mobile": "********21" }
+   book_inspection{ "permit_id": "FTR-30311", "slot": "2026-11-04 09:00", "national_id_last4": "****", "mobile": "********54" }
    Approve? / موافق؟ [y/N]
 ```
 
@@ -94,22 +90,22 @@ uv run rafeeq.py chat --session demo --reset
 
 ### 6) الدليل: سجل التدقيق وقاعدة البيانات
 
-```bash
-tail -n 6 artifacts/rafeeq/audit.jsonl
+```python
+!tail -n 6 artifacts/rafeeq/audit.jsonl
 ```
 
 **المتوقع:** سطور فيها `"decision": "approved"` لـ book_inspection و send_email، وإذا حاول النموذج الإرسال للعنوان الخارجي يطلع `"decision": "blocked_by_guard"` مع الأسباب. الجوال والهوية مخفيين.
 
-```bash
-uv run python -c "import madar; m=madar.Madar('artifacts/rafeeq/db-demo', fresh=False); print(m.sql('SELECT to_addr, subject FROM outbox')); print(m.sql(\"SELECT * FROM inspections WHERE permit_id='FTR-30311'\"))"
+```python
+!uv run python -c "import madar; m=madar.Madar('artifacts/rafeeq/db-demo', fresh=False); print(m.sql('SELECT to_addr, subject FROM outbox')); print(m.sql(\"SELECT * FROM inspections WHERE permit_id='FTR-30311'\"))"
 ```
 
 **المتوقع:** في الـ outbox رسالة وحدة فقط إلى noura.trucks@mail.example، وفي inspections حجز 2026-11-04 09:00.
 
 ### بديل لو ما فيه وقت (طلب واحد)
 
-```bash
-uv run rafeeq.py ask "I was charged twice for my sign permit SGN-40388. Please refund the second payment. ID ends 2277, mobile 0505502277."
+```python
+!uv run rafeeq.py ask "I was charged twice for my sign permit SGN-40388. Please refund the second payment. ID ends 2277, mobile 0505502277."
 ```
 
 **المتوقع:** get_permit ثم موافقة على `create_refund(reason="duplicate_payment")`، ثم REF-5001 بمبلغ 500 ريال وحالته approved.
@@ -144,6 +140,7 @@ uv run rafeeq.py ask "I was charged twice for my sign permit SGN-40388. Please r
 - pass^k يعني أن المهمة تنجح في **كل** المحاولات k. هذا مقياس الاعتمادية، بينما pass@k يعني أنها نجحت ولو مرة وحدة.
 - شغّلت (أو أقترح تشغيل) `--trials 3` على مهام الـ action، والأمر موجود في README.
 - (عبّئي الأرقام الحقيقية من `results/summary.md` قبل العرض.)
+- **قصة من التقييم:** أول تشغيل طلّع 48% للإعدادين. لما قريت الردود، لقيت 18 من 22 فشل جاية من الـ judge نفسه: 14 رد فاضي (نموذج احتياطي «يفكر» ويخلص حد الـ 300 توكن قبل ما يكتب الحكم)، و4 أحكام `"pass": true` بصيغة JSON خربانة. صلّحت الـ grader (1,200 توكن، قراءة متسامحة للـ JSON، نموذج judge من عائلة مختلفة) وأعدت التقييم. الدرس: **الرقم بدون قراءة الردود ممكن يكذب.**
 
 **5. وريني injection نجح قبل الدفاع. هل الدفاع يعتمد على النموذج؟**
 - `uv run rafeeq.py redteam` يشغّل مهام الحقن الأربع مرة بدون حارس (القواعد في البرومبت فقط) ومرة مع الحارس، ويقيس من قاعدة البيانات وش طلع فعلًا.
@@ -164,6 +161,7 @@ uv run rafeeq.py ask "I was charged twice for my sign permit SGN-40388. Please r
 - تغيير النموذج سطر واحد: `AGENT_MODEL` في `.env`.
 - لكن لا نثق بالنموذج الجديد قبل إعادة التقييم: `uv run rafeeq.py eval --config A B`، لأن الـ eval هو اللي يقرر، مو الإحساس.
 - القواعد الحرجة في الكود، فما تتأثر بتغيير النموذج.
+- **وصار فعلًا:** نموذج الدورة الافتراضي (Gemma 4) رجّع 429 في أول تشغيل حي. غيّرت النموذج في سطر واحد إلى Nemotron 3 Ultra مع بديلين من مزوّدين ثانيين، وأعدت التقييم قبل ما أثق فيه.
 
 **8. كم تكلف المحادثة الواحدة عند 1,000 مستخدم في اليوم؟**
 - على النموذج المجاني التكلفة 0$، لكن الحد 1,000 طلب في اليوم مع الرصيد، يعني ما يكفي 1,000 مستخدم. لازم نموذج مدفوع أو استضافة ذاتية.
