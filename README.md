@@ -4,7 +4,7 @@
 > their own application after verifying their identity, and does the routine actions itself: booking inspections,
 > refunds and escalations. A human approves every action, and code stops data from leaving.
 
-**Course:** SDAIA Academy · Agentic AI Systems Engineering · course repository: [github.com/SDAIAAcademy/agentic-ai](https://github.com/SDAIAAcademy/agentic-ai)
+**Course:** [Advanced Agentic AI Systems Engineering - SDAIA Academy](https://github.com/sdaiaacademy/agentic-ai/)
 **Track:** 1 · Rafeeq in production
 **Team:** Shahad (solo)
 **Model(s):** `nvidia/nemotron-3-ultra-550b-a55b:free` via OpenRouter, the largest free model with tool calling on
