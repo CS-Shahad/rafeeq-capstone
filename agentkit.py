@@ -82,7 +82,7 @@ MODEL = os.getenv("AGENT_MODEL") or DEFAULT_MODELS.get(PROVIDER, "")
 # SMALL_MODEL is the eval judge: a different model family from the agent, so the agent does not grade itself.
 SMALL_MODEL = os.getenv("AGENT_SMALL_MODEL") or ("google/gemma-4-31b-it:free" if PROVIDER == "openrouter" else MODEL)
 # OpenRouter tries these in order when the first model is rate-limited or down (the `models` routing parameter)
-FALLBACKS = [m for m in os.getenv("AGENT_FALLBACKS", "nvidia/nemotron-3.5-super-vl:free,thinkingmachines/inkling:free,google/gemma-4-31b-it:free").split(",") if m]
+FALLBACKS = [m for m in os.getenv("AGENT_FALLBACKS", "thinkingmachines/inkling:free,nvidia/nemotron-3.5-super-vl:free").split(",") if m]
 
 QUICK = os.getenv("AGENT_QUICK", "0") == "1"  # smaller workloads (fewer eval tasks, fewer samples)
 USE_CACHE = os.getenv("AGENT_CACHE", "1") == "1"  # replay identical requests from disk: saves free quota on re-runs
@@ -207,7 +207,7 @@ def chat(messages: list[dict], model: str | None = None, tools: list | None = No
         req["tools"] = [t if isinstance(t, dict) else tool_schema(t) for t in tools]
     extra = dict(req.pop("extra_body", {}) or {})
     if provider == "openrouter" and fallbacks and FALLBACKS and "models" not in extra:
-        extra["models"] = [req["model"]] + [m for m in FALLBACKS if m != req["model"]]
+        extra["models"] = ([req["model"]] + [m for m in FALLBACKS if m != req["model"]])[:3]  # OpenRouter allows 3
     payload = dict(provider=provider, base=PROVIDERS[provider]["base_url"], **req, extra_body=extra)
     data, hit = cached_call("chat", payload, lambda: client(provider).chat.completions.create(**req, extra_body=extra or None),
                             use_cache)

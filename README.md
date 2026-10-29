@@ -7,8 +7,8 @@
 **Track:** 1 · Rafeeq in production
 **Team:** Shahad (solo)
 **Model(s):** `nvidia/nemotron-3-ultra-550b-a55b:free` via OpenRouter, the largest free model with tool calling on
-28 October 2026. OpenRouter falls back to `nvidia/nemotron-3.5-super-vl:free`, `thinkingmachines/inkling:free` and
-`google/gemma-4-31b-it:free` (three other providers) when a free model is rate-limited. The judge is
+28 October 2026. OpenRouter falls back to `thinkingmachines/inkling:free` and then `nvidia/nemotron-3.5-super-vl:free` when a free
+model is rate-limited (OpenRouter accepts at most three models per request). The judge is
 `google/gemma-4-31b-it:free`, a different model family, so the agent does not grade itself.
 **Why not the course default?** `google/gemma-4-31b-it:free` and its fallbacks returned HTTP 429 (upstream rate limit)
 on our first live run, so we moved the agent to the next free tool-calling models. Whether they are good enough is
