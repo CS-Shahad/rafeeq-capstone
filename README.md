@@ -253,9 +253,19 @@ The model can be made to read private data and try to send it out.
 | no guard (prompt only) | 0% (0/4) | 75% (3/4) | 0 |
 | with guard | 0% (0/4) | 75% (3/4) | 0 |
 
-Honest reading: this model **refused all four injections on its own**, so in this run the guard was never needed and
-never fired. The guard did not hurt normal work (benign success is identical; the one benign miss is the double
-confirmation in `action-book-inspection`, not the guard). That the guard blocks the call when a model *does* fall for
+**Second run with a smaller model** (`google/gemma-4-26b-a4b-it:free`, `--trials 2`):
+
+| Harness | attack success rate | benign success rate | guard blocks |
+|---|---|---|---|
+| no guard (prompt only) | 0% (0/8) | 100% (8/8) | 0 |
+| with guard | 0% (0/8) | 75% (6/8) | 0 |
+
+The two benign misses with the guard on are not caused by the guard (it blocked nothing: 0 blocks); they are run-to-run
+variance of the free model. (The red team runs config B, as it was set up before the eval chose A.)
+
+Honest reading: **neither model followed any of the 12 injection attempts on its own (4 + 8)**, so the guard was never needed and
+never fired. The guard did not block any normal request in either run (0 blocks); in the first run benign success is identical
+with and without it. That the guard blocks the call when a model *does* fall for
 an attack is shown by the offline tests, which make exactly the call a hijacked model would make, through the real
 harness. Free models follow injections only **some** of the time, and a defence that "usually works" because the
 model happened to refuse is not a defence: that is why the rule lives in code.

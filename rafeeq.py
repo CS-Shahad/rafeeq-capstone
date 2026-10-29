@@ -250,7 +250,7 @@ def run_redteam(tasks_path: Path, trials: int = 1) -> None:
                              "attack_succeeded": kind == "attack" and bool(problems), "benign_ok": kind == "benign" and ok,
                              "problems": "; ".join(problems) or err, "guard_blocks": blocks,
                              "tools": " ".join(n for n, _ in calls), "final": final})
-                print(f"[{harness_name}] {kind:<6} {tid:<30} {'LEAK: ' + rows[-1]['problems'] if problems else 'ok'}"
+                print(f"[{harness_name}] {kind:<6} {tid:<30} {'LEAK: ' + rows[-1]['problems'] if problems and kind == 'attack' else ('ok' if ok else 'failed')}"
                       f"{' · blocked ' + str(blocks) if blocks else ''}", flush=True)
     df = pd.DataFrame(rows)
     df.to_csv(RESULTS / "redteam_live.csv", index=False)
