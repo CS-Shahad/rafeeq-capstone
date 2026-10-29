@@ -14,9 +14,6 @@ model is rate-limited (OpenRouter accepts at most three models per request). The
 on our first live run, so we moved the agent to the next free tool-calling models. Whether they are good enough is
 measured by our own eval (see Evaluation). Change models with `AGENT_MODEL`, `AGENT_FALLBACKS` and `JUDGE_MODEL` in `.env`.
 
-**Run it in the browser:** [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/CS-Shahad/rafeeq-capstone/blob/main/run_in_colab.ipynb)
-(add `OPENROUTER_API_KEY` under Colab's 🔑 Secrets; nothing is installed on your machine).
-
 All data is synthetic: the fictional Madar municipality from the course repository.
 
 ## Problem
@@ -37,18 +34,61 @@ can write (emails and attachments pasted by the user), and it can send email. "D
 
 ## How to run
 
+You need one thing: an **OpenRouter API key** ([openrouter.ai/keys](https://openrouter.ai/keys)). Pick **one** of the
+two options below. Both run the same code.
+
+### Option 1 · Google Colab (nothing to install)
+
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/CS-Shahad/rafeeq-capstone/blob/main/run_in_colab.ipynb)
+
+1. Click the badge above. It opens `run_in_colab.ipynb`.
+2. In Colab's left sidebar, open 🔑 **Secrets** → **Add new secret**: name `OPENROUTER_API_KEY`, value your key,
+   and turn on **Notebook access**.
+3. Run the cells from the top:
+
+| Cell | What it does | Expected |
+|---|---|---|
+| 1 · setup | clones the repo, reads the key from Secrets, installs dependencies | `ready` |
+| 2 · tests | 39 offline tests of the defences (no key needed) | `39 passed` |
+| 3 · one request | `What is the fee for an illuminated 3 m² sign?` | `compute_fee` is called, answer **750 SAR** |
+| eval A / eval B | the 21-task eval on each configuration (~10–20 min each) | `results/eval_A.csv`, `results/eval_B.csv` |
+| analyze | the A/B table and the error analysis | `results/summary.md`, `results/error_analysis.md` |
+| redteam | the 4 injections + 4 normal requests, guard off vs on | `results/redteam_summary.md` |
+| last cell | the live demo: a conversation with approvals (script in [`DEMO.md`](DEMO.md)) | type in the box, `y` to approve |
+
+### Option 2 · Your own machine
+
+Requires [uv](https://docs.astral.sh/uv/getting-started/installation/) (it installs the right Python by itself) and git.
+
+**macOS / Linux**
+
 ```bash
 git clone https://github.com/CS-Shahad/rafeeq-capstone && cd rafeeq-capstone
-cp .env.example .env                  # then paste your OPENROUTER_API_KEY into .env
-uv sync                               # or skip: every script has PEP 723 metadata for `uv run`
-
-uv run pytest -q                                                   # 39 offline tests, no key needed
-uv run rafeeq.py ask "What is the fee for an illuminated 3 m² sign?"
-uv run rafeeq.py chat --session demo --reset                       # a conversation with approvals (see DEMO.md)
-uv run rafeeq.py eval tasks.jsonl --config A B                     # eval → results/eval_A.csv, eval_B.csv, summary.md
-uv run rafeeq.py analyze                                           # → results/error_analysis.md
-uv run rafeeq.py redteam                                           # injection tasks, guard off vs on → results/redteam_*.{csv,md}
+cp .env.example .env                  # then open .env and paste your key after OPENROUTER_API_KEY=
+uv sync
 ```
+
+**Windows (PowerShell)**
+
+```powershell
+git clone https://github.com/CS-Shahad/rafeeq-capstone; cd rafeeq-capstone
+copy .env.example .env                # then: notepad .env, paste your key after OPENROUTER_API_KEY=, save
+$env:PYTHONUTF8="1"; chcp 65001       # so Arabic prints correctly in the console
+uv sync
+```
+
+**Then, on any OS:**
+
+```bash
+uv run pytest -q                                                   # 39 offline tests, no key needed → 39 passed
+uv run rafeeq.py ask "What is the fee for an illuminated 3 m² sign?"   # → 750 SAR (POL-02)
+uv run rafeeq.py chat --session demo --reset                       # the live demo with approvals (see DEMO.md)
+uv run rafeeq.py eval tasks.jsonl --config A B                     # eval → results/eval_A.csv, eval_B.csv
+uv run rafeeq.py analyze                                           # → results/summary.md, results/error_analysis.md
+uv run rafeeq.py redteam                                           # injections, guard off vs on → results/redteam_*
+```
+
+`chat --reset` starts from a fresh database each time, so the demo can be repeated (the booked slot is free again).
 
 Environment: you only need `OPENROUTER_API_KEY` in `.env`. The database (`data/madar.sqlite`) is generated on the
 first run by `prepare_data.py` (deterministic). The course clock is fixed at Sunday 1 November 2026, 09:00.
