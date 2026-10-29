@@ -6,11 +6,16 @@
 
 **Track:** 1 · Rafeeq in production
 **Team:** Shahad (solo)
-**Model(s):** `google/gemma-4-31b-it:free` via OpenRouter. OpenRouter falls back to `google/gemma-4-26b-a4b-it:free`
-and then `nvidia/nemotron-3-super-120b-a12b:free` when a free model is rate-limited. The judge is
-`google/gemma-4-26b-a4b-it:free`. These are the course defaults: free models that support tool calling, checked by the
-course in October 2026. Whether they are good enough for this task is measured by our own eval (see Evaluation).
-You can change the model with `AGENT_MODEL` in `.env`.
+**Model(s):** `nvidia/nemotron-3-ultra-550b-a55b:free` via OpenRouter, the largest free model with tool calling on
+28 October 2026. OpenRouter falls back to `nvidia/nemotron-3.5-super-vl:free`, `thinkingmachines/inkling:free` and
+`google/gemma-4-31b-it:free` (three other providers) when a free model is rate-limited. The judge is
+`google/gemma-4-31b-it:free`, a different model family, so the agent does not grade itself.
+**Why not the course default?** `google/gemma-4-31b-it:free` and its fallbacks returned HTTP 429 (upstream rate limit)
+on our first live run, so we moved the agent to the next free tool-calling models. Whether they are good enough is
+measured by our own eval (see Evaluation). Change models with `AGENT_MODEL`, `AGENT_FALLBACKS` and `JUDGE_MODEL` in `.env`.
+
+**Run it in the browser:** [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/CS-Shahad/rafeeq-capstone/blob/main/run_in_colab.ipynb)
+(add `OPENROUTER_API_KEY` under Colab's 🔑 Secrets; nothing is installed on your machine).
 
 All data is synthetic: the fictional Madar municipality from the course repository.
 
@@ -68,9 +73,10 @@ uv run rafeeq.py eval tasks.jsonl --config A B --trials 3 --ids action-book-insp
 | `harness.py` | permissions, approvals, **egress guard**, verification lockout, token budget, audit log |
 | `AGENTS.md` | Rafeeq's spec, loaded as the system prompt |
 | `tasks.jsonl` | 21 eval tasks with automatic graders |
+| `run_in_colab.ipynb` | every command above in one Colab notebook (key from Colab Secrets) |
 | `tests/test_guard.py` | offline tests of the defences and of the task file |
 | `servers/madar_mcp.py` | the course MCP server (Madar's read tools), extended to share the agent's database |
-| `agentkit.py`, `madar.py`, `evals.py`, `prepare_data.py`, `data/` | copied from the course repository [SDAIAAcademy/agentic-ai](https://github.com/SDAIAAcademy/agentic-ai) (`labs/`) |
+| `agentkit.py`, `madar.py`, `evals.py`, `prepare_data.py`, `data/` | copied from the course repository [SDAIAAcademy/agentic-ai](https://github.com/SDAIAAcademy/agentic-ai) (`labs/`); changed: model defaults (`agentkit.py`) and a sturdier judge (`evals.py`: 1,200 output tokens, tolerant JSON parsing, `JUDGE_MODEL`) |
 | `slides/index.html` | the presentation (press **N** for the Arabic speaker notes) |
 | `DEMO.md` | the live-demo script and prepared Q&A answers (Arabic) |
 

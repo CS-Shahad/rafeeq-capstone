@@ -295,6 +295,10 @@ def analyze() -> None:
         sys.exit("No results/eval_*.csv yet: run `uv run rafeeq.py eval tasks.jsonl --config A B` first.")
     df = pd.concat(frames)
     df["failed_graders"] = df.failed_graders.fillna("")
+    # the README table for every configuration on disk (eval A and eval B may have been run separately)
+    table = summary_table(df)
+    (RESULTS / "summary.md").write_text(table + "\n", encoding="utf-8")
+    print(table + "\n")
 
     def symptom(r) -> str:
         f = r.failed_graders

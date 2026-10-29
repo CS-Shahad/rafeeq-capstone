@@ -69,17 +69,20 @@ PROVIDERS = {
 }
 PROVIDER = os.getenv("AGENT_PROVIDER", "openrouter")
 
-# Free models with tool calling (checked October 2026 on openrouter.ai/models?max_price=0&supported_parameters=tools).
-# Free lists change every few weeks: if a model disappears, pick another from that page and set AGENT_MODEL.
+# Free models with tool calling (checked 28 October 2026 on openrouter.ai/models?max_price=0&supported_parameters=tools).
+# The course default (gemma-4-31b) was rate-limited upstream on 28 Oct, so Rafeeq defaults to the largest free model
+# with tool calling, with fallbacks from three other providers. Free lists change every few weeks: if a model
+# disappears, pick another from that page and set AGENT_MODEL / AGENT_FALLBACKS in .env.
 DEFAULT_MODELS = {
-    "openrouter": "google/gemma-4-31b-it:free",
+    "openrouter": "nvidia/nemotron-3-ultra-550b-a55b:free",
     "hf": "Qwen/Qwen3.6-35B-A3B",  # Inference Providers need credits (HF PRO includes a small monthly amount)
     "custom": os.getenv("LLM_MODEL", ""),
 }
 MODEL = os.getenv("AGENT_MODEL") or DEFAULT_MODELS.get(PROVIDER, "")
-SMALL_MODEL = os.getenv("AGENT_SMALL_MODEL") or ("google/gemma-4-26b-a4b-it:free" if PROVIDER == "openrouter" else MODEL)
+# SMALL_MODEL is the eval judge: a different model family from the agent, so the agent does not grade itself.
+SMALL_MODEL = os.getenv("AGENT_SMALL_MODEL") or ("google/gemma-4-31b-it:free" if PROVIDER == "openrouter" else MODEL)
 # OpenRouter tries these in order when the first model is rate-limited or down (the `models` routing parameter)
-FALLBACKS = [m for m in os.getenv("AGENT_FALLBACKS", "google/gemma-4-26b-a4b-it:free,nvidia/nemotron-3-super-120b-a12b:free").split(",") if m]
+FALLBACKS = [m for m in os.getenv("AGENT_FALLBACKS", "nvidia/nemotron-3.5-super-vl:free,thinkingmachines/inkling:free,google/gemma-4-31b-it:free").split(",") if m]
 
 QUICK = os.getenv("AGENT_QUICK", "0") == "1"  # smaller workloads (fewer eval tasks, fewer samples)
 USE_CACHE = os.getenv("AGENT_CACHE", "1") == "1"  # replay identical requests from disk: saves free quota on re-runs

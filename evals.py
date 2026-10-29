@@ -19,6 +19,7 @@ An `agent` is any function `(prompt: str, m: madar.Madar) -> agentkit.Run` (or a
 from __future__ import annotations
 
 import json
+import os
 import re
 import time
 from dataclasses import dataclass
@@ -68,13 +69,16 @@ def judge(rubric: str, prompt: str, reply: str, tools_used: list[str], model: st
     """An LLM judge. Cached like every call, so re-grading the same reply is free."""
     user = f"RUBRIC:\n{rubric}\n\nUSER MESSAGE:\n{prompt}\n\nTOOLS THE ASSISTANT CALLED: {tools_used or 'none'}\n\nREPLY:\n{reply}"
     resp = K.chat([{"role": "system", "content": JUDGE_PROMPT}, {"role": "user", "content": user}],
-                  model=model or K.SMALL_MODEL, temperature=0, max_tokens=300)
+                  model=model or os.getenv("JUDGE_MODEL") or K.SMALL_MODEL, temperature=0, max_tokens=1200)
     text = K.text_of(resp).strip()
     try:
         data = json.loads(text[text.find("{"): text.rfind("}") + 1])
         return {"pass": bool(data.get("pass")), "reason": str(data.get("reason", ""))}
     except (ValueError, AttributeError):
-        return {"pass": False, "reason": f"unparseable judge output: {text[:120]}"}
+        m = re.search(r'"?pass"?\s*:\s*(true|false)', text, re.I)  # e.g. {"pass": true, "reason": unquoted text}
+        if m:
+            return {"pass": m.group(1).lower() == "true", "reason": text[:200]}
+        return {"pass": False, "reason": f"unparseable judge output: {text[:120] or '(empty)'}"}
 
 
 def grade(task: dict, final: str, tool_calls: list[tuple[str, dict]], m: madar.Madar,
